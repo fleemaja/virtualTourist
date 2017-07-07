@@ -12,12 +12,6 @@ import MapKit
 class TravelLocationsMapViewController: UIViewController {
     
     var coordinate: CLLocationCoordinate2D?
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        
-        mapView.delegate = self
-    }
 
     @IBOutlet weak var mapView: MKMapView! {
         didSet {
@@ -25,6 +19,12 @@ class TravelLocationsMapViewController: UIViewController {
             pressRecognizer.minimumPressDuration = 2.0
             mapView.addGestureRecognizer(pressRecognizer)
         }
+    }
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        mapView.delegate = self
     }
     
     func addPinToMap(gestureRecognizer:UIGestureRecognizer) {
@@ -46,8 +46,15 @@ class TravelLocationsMapViewController: UIViewController {
             let photoView = (segue.destination as! PhotoAlbumViewController)
             photoView.latitudeVal = coordinate?.latitude
             photoView.longitudeVal = coordinate?.longitude
+            getFlickrPhotos(latitude: (coordinate?.latitude)!, longitude: (coordinate?.longitude)!)
         }
         
+    }
+    
+    func getFlickrPhotos(latitude: Double, longitude: Double) {
+        FlickrApiClient.shared.getPhotos(latitude: latitude, longitude: longitude) { data, response, error in
+            print(NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!)
+        }
     }
 
 }

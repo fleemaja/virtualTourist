@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3A8312191F0FEAE8002A65B5 /* FlickrApiClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3A8312181F0FEAE8002A65B5 /* FlickrApiClient.swift */; };
 		3AC28EA81F0ED35E000F2E68 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC28EA71F0ED35E000F2E68 /* AppDelegate.swift */; };
 		3AC28EAA1F0ED35E000F2E68 /* TravelLocationsMapViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AC28EA91F0ED35E000F2E68 /* TravelLocationsMapViewController.swift */; };
 		3AC28EAD1F0ED35E000F2E68 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 3AC28EAB1F0ED35E000F2E68 /* Main.storyboard */; };
@@ -17,6 +18,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		3A8312181F0FEAE8002A65B5 /* FlickrApiClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlickrApiClient.swift; sourceTree = "<group>"; };
 		3AC28EA41F0ED35E000F2E68 /* virtualTourist.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = virtualTourist.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		3AC28EA71F0ED35E000F2E68 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		3AC28EA91F0ED35E000F2E68 /* TravelLocationsMapViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TravelLocationsMapViewController.swift; sourceTree = "<group>"; };
@@ -60,6 +62,7 @@
 			children = (
 				3AC28EBC1F0ED3DC000F2E68 /* Supporting Files */,
 				3AC28EA91F0ED35E000F2E68 /* TravelLocationsMapViewController.swift */,
+				3A8312181F0FEAE8002A65B5 /* FlickrApiClient.swift */,
 				3AC28EAB1F0ED35E000F2E68 /* Main.storyboard */,
 				3AC28EBD1F0ED52E000F2E68 /* PhotoAlbumViewController.swift */,
 				3AC28EAE1F0ED35E000F2E68 /* virtualTourist.xcdatamodeld */,
@@ -153,6 +156,7 @@
 				3AC28EAA1F0ED35E000F2E68 /* TravelLocationsMapViewController.swift in Sources */,
 				3AC28EB01F0ED35E000F2E68 /* virtualTourist.xcdatamodeld in Sources */,
 				3AC28EA81F0ED35E000F2E68 /* AppDelegate.swift in Sources */,
+				3A8312191F0FEAE8002A65B5 /* FlickrApiClient.swift in Sources */,
 				3AC28EBE1F0ED52E000F2E68 /* PhotoAlbumViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -317,6 +321,7 @@
 				3AC28EBB1F0ED35E000F2E68 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
