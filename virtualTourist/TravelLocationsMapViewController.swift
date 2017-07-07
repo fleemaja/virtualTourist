@@ -46,14 +46,6 @@ class TravelLocationsMapViewController: UIViewController {
             let photoView = (segue.destination as! PhotoAlbumViewController)
             photoView.latitudeVal = coordinate?.latitude
             photoView.longitudeVal = coordinate?.longitude
-            getFlickrPhotos(latitude: (coordinate?.latitude)!, longitude: (coordinate?.longitude)!)
-        }
-        
-    }
-    
-    func getFlickrPhotos(latitude: Double, longitude: Double) {
-        FlickrApiClient.shared.getPhotos(latitude: latitude, longitude: longitude) { data, response, error in
-            print(NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!)
         }
     }
 
