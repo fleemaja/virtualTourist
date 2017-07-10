@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CoreData
 
 class PhotoAlbumViewController: UIViewController {
 
@@ -18,6 +19,8 @@ class PhotoAlbumViewController: UIViewController {
     
     var latitudeVal: Double?
     var longitudeVal: Double?
+    
+    var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
     
     var photoPlaceholders = [URL]() {
         didSet {
@@ -76,7 +79,35 @@ class PhotoAlbumViewController: UIViewController {
                     if data != nil {
                         let image = UIImage(data: data!)
                         self.photos.append(image!)
+                        var photoInfo = [String:Any]()
+                        photoInfo["latitude"] = self.latitudeVal
+                        photoInfo["longitude"] = self.longitudeVal
+                        photoInfo["photo"] = image
+                        self.updateDatabase(with: photoInfo)
                     }
+                }
+            }
+        }
+    }
+    
+    private func updateDatabase(with photoInfo: [String:Any]) {
+        container?.performBackgroundTask { [weak self] context in
+            _ = try? Photo.findOrCreatePhoto(matching: photoInfo, in: context)
+            try? context.save()
+            self?.printDatabaseStatistics()
+        }
+    }
+    
+    private func printDatabaseStatistics() {
+        if let context = container?.viewContext {
+            context.perform {
+                let photoRequest: NSFetchRequest<Photo> = Photo.fetchRequest()
+                if let photoCount = (try? context.fetch(photoRequest))?.count {
+                    print("\(photoCount) photos in database")
+                }
+                let pinRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
+                if let pinCount = (try? context.fetch(pinRequest))?.count {
+                    print("\(pinCount) pins in database")
                 }
             }
         }
