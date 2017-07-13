@@ -41,7 +41,10 @@ class PhotoAlbumViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!)
+        // if pin already has photos:
+        // getPhotos()
+        // else:
+//        getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!)
         
         collectionView.delegate = self
         collectionView.dataSource = self
@@ -49,6 +52,8 @@ class PhotoAlbumViewController: UIViewController {
         latitude?.text = "latitude: \(latitudeVal ?? 0.0)"
         longitude?.text = "longitude: \(longitudeVal ?? 0.0)"
     }
+    
+    // add get new collection button that clears db for this pin and calls getFlickrPhotos
     
     func getFlickrPhotos(latitude: Double, longitude: Double) {
         FlickrApiClient.shared.getPhotos(latitude: latitude, longitude: longitude) { data, response, error in

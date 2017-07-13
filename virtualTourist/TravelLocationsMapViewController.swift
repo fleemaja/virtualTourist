@@ -8,10 +8,13 @@
 
 import UIKit
 import MapKit
+import CoreData
 
 class TravelLocationsMapViewController: UIViewController {
     
     var coordinate: CLLocationCoordinate2D?
+    
+    var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
 
     @IBOutlet weak var mapView: MKMapView! {
         didSet {
@@ -23,8 +26,9 @@ class TravelLocationsMapViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
         mapView.delegate = self
+        // load all persisted pins
+        addAnnotations()
     }
     
     func addPinToMap(gestureRecognizer:UIGestureRecognizer) {
@@ -34,10 +38,20 @@ class TravelLocationsMapViewController: UIViewController {
             let newCoordinates = mapView.convert(touchPoint, toCoordinateFrom: mapView)
             let annotation = MKPointAnnotation()
             annotation.coordinate = newCoordinates
-//            annotation.title = "TITLE"
-//            annotation.subtitle = "SUBTITLE"
             coordinate = newCoordinates
             mapView.addAnnotation(annotation)
+            // add pin to db
+            var pinInfo = [String:Any]()
+            pinInfo["latitude"] = coordinate?.latitude
+            pinInfo["longitude"] = coordinate?.longitude
+            updateDatabase(with: pinInfo)
+        }
+    }
+    
+    private func updateDatabase(with pinInfo: [String:Any]) {
+        container?.performBackgroundTask { context in
+            _ = try? Pin.findOrCreatePin(matching: pinInfo, in: context)
+            try? context.save()
         }
     }
     
@@ -46,6 +60,30 @@ class TravelLocationsMapViewController: UIViewController {
             let photoView = (segue.destination as! PhotoAlbumViewController)
             photoView.latitudeVal = coordinate?.latitude
             photoView.longitudeVal = coordinate?.longitude
+            // pass along pin info from db
+        }
+    }
+    
+    private func addAnnotations() {
+        var annotations = [MKPointAnnotation]()
+        
+        if let context = container?.viewContext {
+            context.perform {
+                let pinRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
+                if let pins = (try? context.fetch(pinRequest)) {
+                    for pin in pins {
+                        let annotation = MKPointAnnotation()
+                        let lat = CLLocationDegrees(pin.latitude)
+                        let long = CLLocationDegrees(pin.longitude)
+                        
+                        let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+                        annotation.coordinate = coordinate
+                        
+                        annotations.append(annotation)
+                    }
+                    self.mapView.addAnnotations(annotations)
+                }
+            }
         }
     }
 

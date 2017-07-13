@@ -11,9 +11,9 @@ import CoreData
 
 class Pin: NSManagedObject {
 
-    class func findOrCreatePin(matching photoInfo: [String:Any], in context: NSManagedObjectContext) throws -> Pin {
+    class func findOrCreatePin(matching pinInfo: [String:Any], in context: NSManagedObjectContext) throws -> Pin {
         let request: NSFetchRequest<Pin> = Pin.fetchRequest()
-        request.predicate = NSPredicate(format: "%K == %@ AND %K == %@", argumentArray:["latitude", photoInfo["latitude"] as! Double, "longitude", photoInfo["longitude"] as! Double])
+        request.predicate = NSPredicate(format: "%K == %@ AND %K == %@", argumentArray:["latitude", pinInfo["latitude"] as! Double, "longitude", pinInfo["longitude"] as! Double])
         
         do {
             let matches = try context.fetch(request)
@@ -25,8 +25,8 @@ class Pin: NSManagedObject {
         }
         
         let pin = Pin(context: context)
-        pin.latitude = photoInfo["latitude"] as! Double
-        pin.longitude = photoInfo["longitude"] as! Double
+        pin.latitude = pinInfo["latitude"] as! Double
+        pin.longitude = pinInfo["longitude"] as! Double
         return pin
     }
     
