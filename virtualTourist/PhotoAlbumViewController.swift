@@ -60,6 +60,8 @@ class PhotoAlbumViewController: UIViewController {
         setMapPinLocation()
         
         setPinAttribute()
+        
+        setupCollectionFlowLayout()
     }
     
     private func setMapPinLocation() {
@@ -126,7 +128,6 @@ class PhotoAlbumViewController: UIViewController {
     
     func getFlickrPhotos(latitude: Double, longitude: Double) {
         FlickrApiClient.shared.getPhotos(latitude: latitude, longitude: longitude) { data, response, error in
-            //            print(NSString(data: data!, encoding: String.Encoding.utf8.rawValue)!)
             if error != nil {
                 return
             }
@@ -165,29 +166,12 @@ class PhotoAlbumViewController: UIViewController {
     private func addPhotoToDatabase(image: UIImage, pinInfo: [String:Any]) {
         var photoInfo = [String:Any]()
         photoInfo["photo"] = UIImagePNGRepresentation(image) as NSData?
-        container?.performBackgroundTask { [weak self] context in
-            print("trying to create photo")
+        container?.performBackgroundTask { context in
             if let pin = try? Pin.findOrCreatePin(matching: pinInfo, in: context) {
                 if (try? context.save()) != nil {
                     photoInfo["pin"] = pin
                     _ = try? Photo.createPhoto(matching: photoInfo, in: context)
                     try? context.save()
-                    self?.printDatabaseStatistics()
-                }
-            }
-        }
-    }
-    
-    private func printDatabaseStatistics() {
-        if let context = container?.viewContext {
-            context.perform {
-                let photoRequest: NSFetchRequest<Photo> = Photo.fetchRequest()
-                if let photoCount = (try? context.fetch(photoRequest))?.count {
-                    print("\(photoCount) photos in database")
-                }
-                let pinRequest: NSFetchRequest<Pin> = Pin.fetchRequest()
-                if let pinCount = (try? context.fetch(pinRequest))?.count {
-                    print("\(pinCount) pins in database")
                 }
             }
         }
@@ -213,18 +197,24 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let photoToDelete = photos[indexPath.row]
-        let photoDataToDelete = UIImagePNGRepresentation(photoToDelete)! as NSData
-        if let context = container?.viewContext {
-            context.perform {
-                let photoRequest: NSFetchRequest<Photo> = Photo.fetchRequest()
-                photoRequest.predicate = NSPredicate(format: "%K == %@", argumentArray:["data", photoDataToDelete])
-                if let result = try? context.fetch(photoRequest) {
-                    for object in result {
-                        context.delete(object)
-                        self.placeholderCount -= 1
-                        self.photos.remove(at: indexPath.row)
-                        try? context.save()
+        if indexPath.row < photos.count {
+            let photoData = UIImagePNGRepresentation(photos[indexPath.row])!
+            self.photos.remove(at: indexPath.row)
+            self.placeholderCount -= 1
+            DispatchQueue.global().async {
+                if let context = self.container?.viewContext {
+                    context.perform {
+                        let photoRequest: NSFetchRequest<Photo> = Photo.fetchRequest()
+                        photoRequest.predicate = NSPredicate(format: "%K == %@", argumentArray:["pin", self.pin!])
+                        if let results = (try? context.fetch(photoRequest)) {
+                            for object in results {
+                                let objectData = object.data! as Data
+                                if objectData == photoData {
+                                    context.delete(object)
+                                    try? context.save()
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -243,4 +233,35 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
         
         return cell
     }
+}
+
+extension PhotoAlbumViewController: UICollectionViewDelegateFlowLayout {
+    
+    override func willAnimateRotation(to toInterfaceOrientation: UIInterfaceOrientation, duration: TimeInterval) {
+        setupCollectionFlowLayout()
+    }
+    
+    func setupCollectionFlowLayout() {
+        let items: CGFloat = view.frame.size.width > view.frame.size.height ? 5.0 : 3.0
+        let space: CGFloat = 3.0
+        let dimension = (view.frame.size.width - ((items + 1) * space)) / items
+        
+        let layout = UICollectionViewFlowLayout()
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        layout.minimumLineSpacing = 8.0 - items
+        layout.minimumInteritemSpacing = space
+        layout.itemSize = CGSize(width: dimension, height: dimension)
+        
+        collectionView.collectionViewLayout = layout
+    }
+    
+    func collectionView(_ collectionView: UICollectionView,
+                        layout collectionViewLayout: UICollectionViewLayout,
+                        sizeForItemAt indexPath: IndexPath) -> CGSize {
+        let items: CGFloat = view.frame.size.width > view.frame.size.height ? 5.0 : 3.0
+        let space: CGFloat = 3.0
+        let dimension = (view.frame.size.width - ((items + 1) * space)) / items
+        return CGSize(width: dimension, height: dimension)
+    }
+    
 }
