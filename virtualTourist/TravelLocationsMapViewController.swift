@@ -60,7 +60,6 @@ class TravelLocationsMapViewController: UIViewController {
             let photoView = (segue.destination as! PhotoAlbumViewController)
             photoView.latitudeVal = coordinate?.latitude
             photoView.longitudeVal = coordinate?.longitude
-            // pass along pin info from db
         }
     }
     

@@ -7,12 +7,12 @@
 //
 
 import UIKit
+import MapKit
 import CoreData
 
 class PhotoAlbumViewController: UIViewController {
-
-    @IBOutlet weak var latitude: UILabel?
-    @IBOutlet weak var longitude: UILabel?
+    
+    @IBOutlet weak var mapView: MKMapView!
     
     @IBOutlet weak var collectionView: UICollectionView!
     @IBOutlet weak var collectionViewFlowLayout: UICollectionViewFlowLayout!
@@ -20,15 +20,17 @@ class PhotoAlbumViewController: UIViewController {
     var latitudeVal: Double?
     var longitudeVal: Double?
     
-    var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
-    
-    var photoPlaceholders = [URL]() {
+    var pin: Pin? {
         didSet {
-            DispatchQueue.main.async {
-                self.collectionView.reloadData()
+            if pin?.photos?.count == 0 {
+                getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!)
+            } else {
+                setPhotos()
             }
         }
     }
+    
+    var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
     
     var photos = [UIImage]() {
         didSet {
@@ -41,16 +43,42 @@ class PhotoAlbumViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // if pin already has photos:
-        // getPhotos()
-        // else:
-//        getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!)
-        
         collectionView.delegate = self
         collectionView.dataSource = self
         
-        latitude?.text = "latitude: \(latitudeVal ?? 0.0)"
-        longitude?.text = "longitude: \(longitudeVal ?? 0.0)"
+        mapView.delegate = self as? MKMapViewDelegate
+        
+        let annotation = MKPointAnnotation()
+        let lat = CLLocationDegrees(latitudeVal!)
+        let long = CLLocationDegrees(longitudeVal!)
+        
+        let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
+        annotation.coordinate = coordinate
+        
+        mapView.addAnnotation(annotation)
+        
+        setPin()
+    }
+    
+    private func setPin() {
+        var pinInfo = [String:Any]()
+        pinInfo["latitude"] = latitudeVal
+        pinInfo["longitude"] = longitudeVal
+        container?.performBackgroundTask { [weak self] context in
+            let pin = try? Pin.findOrCreatePin(matching: pinInfo, in: context)
+            if (try? context.save()) != nil {
+                print("set pin variable")
+                self?.pin = pin
+            }
+        }
+    }
+    
+    private func setPhotos() {
+        let cdPhotos = pin?.photos
+        for photo in cdPhotos! {
+            let image = UIImage(data: (photo as! Photo).data! as Data)
+            self.photos.append(image!)
+        }
     }
     
     // add get new collection button that clears db for this pin and calls getFlickrPhotos
@@ -74,32 +102,37 @@ class PhotoAlbumViewController: UIViewController {
                 print("JSON converting error")
                 return
             }
-            
             for result in results {
                 let url = URL(string: result["url_m"] as! String)
-                self.photoPlaceholders.append(url!)
                 DispatchQueue.global().async {
                     let data = try? Data(contentsOf: url!)
                     
                     if data != nil {
                         let image = UIImage(data: data!)
                         self.photos.append(image!)
-                        var photoInfo = [String:Any]()
-                        photoInfo["latitude"] = self.latitudeVal
-                        photoInfo["longitude"] = self.longitudeVal
-                        photoInfo["photo"] = image
-                        self.updateDatabase(with: photoInfo)
+                        var pinInfo = [String:Any]()
+                        pinInfo["latitude"] = self.latitudeVal
+                        pinInfo["longitude"] = self.longitudeVal
+                        self.addPhotoToDatabase(image: image!, pinInfo: pinInfo)
                     }
                 }
             }
         }
     }
     
-    private func updateDatabase(with photoInfo: [String:Any]) {
+    private func addPhotoToDatabase(image: UIImage, pinInfo: [String:Any]) {
+        var photoInfo = [String:Any]()
+        photoInfo["photo"] = UIImagePNGRepresentation(image) as NSData?
         container?.performBackgroundTask { [weak self] context in
-            _ = try? Photo.findOrCreatePhoto(matching: photoInfo, in: context)
-            try? context.save()
-            self?.printDatabaseStatistics()
+            print("trying to create photo")
+            if let pin = try? Pin.findOrCreatePin(matching: pinInfo, in: context) {
+                if (try? context.save()) != nil {
+                    photoInfo["pin"] = pin
+                    _ = try? Photo.createPhoto(matching: photoInfo, in: context)
+                    try? context.save()
+                    self?.printDatabaseStatistics()
+                }
+            }
         }
     }
     
@@ -133,7 +166,7 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
      * Number of photos been fetched
      */
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return self.photoPlaceholders.count
+        return self.photos.count
 //        return fetchedResultsController.sections![section].numberOfObjects
     }
     
