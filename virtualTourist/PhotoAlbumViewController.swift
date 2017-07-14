@@ -32,6 +32,14 @@ class PhotoAlbumViewController: UIViewController {
     
     var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
     
+    var placeholderCount = 0 {
+        didSet {
+            DispatchQueue.main.async {
+                self.collectionView.reloadData()
+            }
+        }
+    }
+    
     var photos = [UIImage]() {
         didSet {
             DispatchQueue.main.async {
@@ -47,7 +55,14 @@ class PhotoAlbumViewController: UIViewController {
         collectionView.dataSource = self
         
         mapView.delegate = self as? MKMapViewDelegate
+        mapView.isUserInteractionEnabled = false
         
+        setMapPinLocation()
+        
+        setPinAttribute()
+    }
+    
+    private func setMapPinLocation() {
         let annotation = MKPointAnnotation()
         let lat = CLLocationDegrees(latitudeVal!)
         let long = CLLocationDegrees(longitudeVal!)
@@ -55,19 +70,22 @@ class PhotoAlbumViewController: UIViewController {
         let coordinate = CLLocationCoordinate2D(latitude: lat, longitude: long)
         annotation.coordinate = coordinate
         
-        mapView.addAnnotation(annotation)
+        let region = MKCoordinateRegionMake(coordinate, MKCoordinateSpanMake(10, 10))
         
-        setPin()
+        DispatchQueue.main.async(execute: {
+            self.mapView.addAnnotation(annotation)
+            self.mapView.setRegion(region, animated: true)
+            self.mapView.regionThatFits(region)
+        })
     }
     
-    private func setPin() {
+    private func setPinAttribute() {
         var pinInfo = [String:Any]()
         pinInfo["latitude"] = latitudeVal
         pinInfo["longitude"] = longitudeVal
         container?.performBackgroundTask { [weak self] context in
             let pin = try? Pin.findOrCreatePin(matching: pinInfo, in: context)
             if (try? context.save()) != nil {
-                print("set pin variable")
                 self?.pin = pin
             }
         }
@@ -76,6 +94,7 @@ class PhotoAlbumViewController: UIViewController {
     private func setPhotos() {
         let cdPhotos = pin?.photos
         for photo in cdPhotos! {
+            placeholderCount += 1
             let image = UIImage(data: (photo as! Photo).data! as Data)
             self.photos.append(image!)
         }
@@ -104,6 +123,7 @@ class PhotoAlbumViewController: UIViewController {
             }
             for result in results {
                 let url = URL(string: result["url_m"] as! String)
+                self.placeholderCount += 1
                 DispatchQueue.global().async {
                     let data = try? Data(contentsOf: url!)
                     
@@ -166,8 +186,27 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
      * Number of photos been fetched
      */
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return self.photos.count
+        return placeholderCount
 //        return fetchedResultsController.sections![section].numberOfObjects
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        let photoToDelete = photos[indexPath.row]
+        let photoDataToDelete = UIImagePNGRepresentation(photoToDelete)! as NSData
+        if let context = container?.viewContext {
+            context.perform {
+                let photoRequest: NSFetchRequest<Photo> = Photo.fetchRequest()
+                photoRequest.predicate = NSPredicate(format: "%K == %@", argumentArray:["data", photoDataToDelete])
+                if let result = try? context.fetch(photoRequest) {
+                    for object in result {
+                        context.delete(object)
+                        self.placeholderCount -= 1
+                        self.photos.remove(at: indexPath.row)
+                        try? context.save()
+                    }
+                }
+            }
+        }
     }
     
     /*
