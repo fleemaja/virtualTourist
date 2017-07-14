@@ -123,6 +123,20 @@
                                     </mask>
                                 </variation>
                             </mapView>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="gUu-e6-kvH">
+                                <rect key="frame" x="0.0" y="607" width="375" height="60"/>
+                                <color key="backgroundColor" red="0.9040455624" green="0.9040455624" blue="0.9040455624" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="60" id="a5O-D6-3mt"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="boldSystem" pointSize="20"/>
+                                <state key="normal" title="New Collection">
+                                    <color key="titleColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                                <connections>
+                                    <action selector="fetchNewCollection:" destination="cB4-0V-Vqh" eventType="touchUpInside" id="Y0R-NC-ats"/>
+                                </connections>
+                            </button>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
@@ -131,14 +145,17 @@
                             <constraint firstItem="b1T-oF-KNM" firstAttribute="leading" secondItem="Z29-ny-KPU" secondAttribute="leading" id="9vs-La-nmP"/>
                             <constraint firstItem="b1T-oF-KNM" firstAttribute="leading" secondItem="Z29-ny-KPU" secondAttribute="leading" id="LtB-Fv-zt7"/>
                             <constraint firstAttribute="trailing" secondItem="c07-R5-BsX" secondAttribute="trailing" id="QfQ-qT-XQ8"/>
+                            <constraint firstItem="gUu-e6-kvH" firstAttribute="width" secondItem="c07-R5-BsX" secondAttribute="width" id="aH8-4m-wvE"/>
                             <constraint firstAttribute="trailing" secondItem="b1T-oF-KNM" secondAttribute="trailing" id="dnQ-r1-EzI"/>
                             <constraint firstItem="c07-R5-BsX" firstAttribute="bottom" secondItem="4ou-EP-seh" secondAttribute="top" id="gGa-21-gvA"/>
                             <constraint firstItem="4ou-EP-seh" firstAttribute="top" secondItem="b1T-oF-KNM" secondAttribute="bottom" id="kEJ-xH-jJC"/>
                             <constraint firstItem="b1T-oF-KNM" firstAttribute="leading" secondItem="Z29-ny-KPU" secondAttribute="leading" id="mTs-gN-AWS"/>
+                            <constraint firstItem="4ou-EP-seh" firstAttribute="top" secondItem="gUu-e6-kvH" secondAttribute="bottom" id="mkt-8a-piS"/>
                             <constraint firstItem="c07-R5-BsX" firstAttribute="leading" secondItem="Z29-ny-KPU" secondAttribute="leading" id="qHX-AW-NXo">
                                 <variation key="heightClass=compact" constant="188"/>
                             </constraint>
                             <constraint firstItem="b1T-oF-KNM" firstAttribute="top" secondItem="yXm-kV-iKi" secondAttribute="bottom" id="rKg-8a-tuA"/>
+                            <constraint firstItem="gUu-e6-kvH" firstAttribute="leading" secondItem="c07-R5-BsX" secondAttribute="leading" id="sgz-B3-zVm"/>
                         </constraints>
                         <variation key="default">
                             <mask key="constraints">
@@ -173,7 +190,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="vip-vS-m0A" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="1840.0299850074964" y="37.600000000000001"/>
+            <point key="canvasLocation" x="1839.2" y="37.331334332833585"/>
         </scene>
         <!--Navigation Controller-->
         <scene sceneID="euZ-Oe-G5T">

@@ -92,11 +92,33 @@ class PhotoAlbumViewController: UIViewController {
     }
     
     private func setPhotos() {
-        let cdPhotos = pin?.photos
-        for photo in cdPhotos! {
+        let pinPhotos = pin?.photos
+        for photo in pinPhotos! {
             placeholderCount += 1
             let image = UIImage(data: (photo as! Photo).data! as Data)
             self.photos.append(image!)
+        }
+    }
+    
+    @IBAction func fetchNewCollection(_ sender: UIButton) {
+        deletePinPhotos()
+        getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!)
+    }
+    
+    private func deletePinPhotos() {
+        if let context = container?.viewContext {
+            context.perform {
+                let photoRequest: NSFetchRequest<Photo> = Photo.fetchRequest()
+                photoRequest.predicate = NSPredicate(format: "%K == %@", argumentArray:["pin", self.pin!])
+                if let result = try? context.fetch(photoRequest) {
+                    for object in result {
+                        context.delete(object)
+                        self.placeholderCount = 0
+                        self.photos = [UIImage]()
+                    }
+                    try? context.save()
+                }
+            }
         }
     }
     
