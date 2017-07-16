@@ -142,8 +142,6 @@ class PhotoAlbumViewController: UIViewController {
         }
     }
     
-    // add get new collection button that clears db for this pin and calls getFlickrPhotos
-    
     func getFlickrPhotos(latitude: Double, longitude: Double, page: Int16) {
         FlickrApiClient.shared.getPhotos(latitude: latitude, longitude: longitude, page: page) { data, response, error in
             if error != nil {
@@ -212,9 +210,6 @@ class PhotoAlbumViewController: UIViewController {
 
 extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDataSource {
     // MARK: UICollectionViewDataSource
-    /*
-     * Number of sections been fetched
-     */
     func numberOfSectionsInCollectionView(collectionView: UICollectionView) -> Int {
         return 1
     }
@@ -224,7 +219,6 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
      */
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         return placeholderCount
-//        return fetchedResultsController.sections![section].numberOfObjects
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -256,7 +250,6 @@ extension PhotoAlbumViewController: UICollectionViewDelegate, UICollectionViewDa
      * Return one collection cell prepared to display
      */
     internal func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-//        let photo = fetchedResultsController.objectAtIndexPath(indexPath) as! Photo
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "photoCell", for: indexPath) as! PhotoCollectionViewCell
         if indexPath.row < self.photos.count {
             cell.photo = self.photos[indexPath.row]
