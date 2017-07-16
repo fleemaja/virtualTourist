@@ -152,7 +152,6 @@ class PhotoAlbumViewController: UIViewController {
                     
                     if data != nil {
                         let image = UIImage(data: data!)
-                        self.photos.append(image!)
                         var pinInfo = [String:Any]()
                         pinInfo["latitude"] = self.latitudeVal
                         pinInfo["longitude"] = self.longitudeVal
@@ -163,15 +162,28 @@ class PhotoAlbumViewController: UIViewController {
         }
     }
     
+    enum DBError: Error {
+        case saveError(String)
+    }
+    
     private func addPhotoToDatabase(image: UIImage, pinInfo: [String:Any]) {
         var photoInfo = [String:Any]()
         photoInfo["photo"] = UIImagePNGRepresentation(image) as NSData?
         container?.performBackgroundTask { context in
             if let pin = try? Pin.findOrCreatePin(matching: pinInfo, in: context) {
                 if (try? context.save()) != nil {
-                    photoInfo["pin"] = pin
-                    _ = try? Photo.createPhoto(matching: photoInfo, in: context)
-                    try? context.save()
+                    do {
+                        photoInfo["pin"] = pin
+                        let newPhoto = try? Photo.createPhoto(matching: photoInfo, in: context)
+                        guard (try? context.save()) != nil else {
+                            self.placeholderCount -= 1
+                            throw DBError.saveError("Could not save to DB")
+                        }
+                        let image = UIImage(data: (newPhoto!).data! as Data)
+                        self.photos.append(image!)
+                    } catch {
+                        print("error: \(error)")
+                    }
                 }
             }
         }
