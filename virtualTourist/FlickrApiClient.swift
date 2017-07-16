@@ -10,8 +10,8 @@ import Foundation
 
 class FlickrApiClient {
     
-    public func getPhotos(latitude: Double, longitude: Double, handler: @escaping (_ data: Data?, _ response: AnyObject?, _ error: String?) -> Void) {
-        let url = constructURLString(latitude: latitude, longitude: longitude)
+    public func getPhotos(latitude: Double, longitude: Double, page: Int16, handler: @escaping (_ data: Data?, _ response: AnyObject?, _ error: String?) -> Void) {
+        let url = constructURLString(latitude: latitude, longitude: longitude, page: page)
         let request = NSMutableURLRequest(url: URL(string: url)!)
         let session = URLSession.shared
         let task = session.dataTask(with: request as URLRequest) { data, response, error in
@@ -20,7 +20,7 @@ class FlickrApiClient {
         task.resume()
     }
     
-    func constructURLString(latitude: Double, longitude: Double) -> String {
+    func constructURLString(latitude: Double, longitude: Double, page: Int16) -> String {
         let apiUrl = "https://api.flickr.com/services/rest/"
         let apiKey = "566809a378d6f02efb1e43163fd55bc5"
         
@@ -33,7 +33,7 @@ class FlickrApiClient {
             "format": "json",
             "nojsoncallback": "1",
             "per_page": "30",
-            "page": "1",
+            "page": page,
             ] as [String : Any]
         
         let request = prepareRequest(baseUrl: "\(apiUrl)", params: params)

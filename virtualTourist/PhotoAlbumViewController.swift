@@ -20,15 +20,9 @@ class PhotoAlbumViewController: UIViewController {
     var latitudeVal: Double?
     var longitudeVal: Double?
     
-    var pin: Pin? {
-        didSet {
-            if pin?.photos?.count == 0 {
-                getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!)
-            } else {
-                setPhotos()
-            }
-        }
-    }
+    var page: Int16?
+    
+    var pin: Pin?
     
     var container: NSPersistentContainer? = (UIApplication.shared.delegate as? AppDelegate)?.persistentContainer
     
@@ -59,9 +53,17 @@ class PhotoAlbumViewController: UIViewController {
         
         setMapPinLocation()
         
-        setPinAttribute()
+        setupPinOnLoad()
         
         setupCollectionFlowLayout()
+    }
+    
+    private func setupPhotosOnLoad() {
+        if pin?.photos?.count == 0 {
+            getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!, page: page!)
+        } else {
+            setPhotos()
+        }
     }
     
     private func setMapPinLocation() {
@@ -81,12 +83,26 @@ class PhotoAlbumViewController: UIViewController {
         })
     }
     
-    private func setPinAttribute() {
+    private func setupPinOnLoad() {
         var pinInfo = [String:Any]()
         pinInfo["latitude"] = latitudeVal
         pinInfo["longitude"] = longitudeVal
         container?.performBackgroundTask { [weak self] context in
             let pin = try? Pin.findOrCreatePin(matching: pinInfo, in: context)
+            if (try? context.save()) != nil {
+                self?.pin = pin
+                self?.page = pin?.currentPage
+                self?.setupPhotosOnLoad()
+            }
+        }
+    }
+    
+    private func incrementDBPinPage() {
+        var pinInfo = [String:Any]()
+        pinInfo["latitude"] = latitudeVal
+        pinInfo["longitude"] = longitudeVal
+        container?.performBackgroundTask { [weak self] context in
+            let pin = try? Pin.updatePinPage(matching: pinInfo, in: context)
             if (try? context.save()) != nil {
                 self?.pin = pin
             }
@@ -104,7 +120,9 @@ class PhotoAlbumViewController: UIViewController {
     
     @IBAction func fetchNewCollection(_ sender: UIButton) {
         deletePinPhotos()
-        getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!)
+        page = page! + 1
+        getFlickrPhotos(latitude: (latitudeVal)!, longitude: (longitudeVal)!, page: page!)
+        incrementDBPinPage()
     }
     
     private func deletePinPhotos() {
@@ -126,8 +144,8 @@ class PhotoAlbumViewController: UIViewController {
     
     // add get new collection button that clears db for this pin and calls getFlickrPhotos
     
-    func getFlickrPhotos(latitude: Double, longitude: Double) {
-        FlickrApiClient.shared.getPhotos(latitude: latitude, longitude: longitude) { data, response, error in
+    func getFlickrPhotos(latitude: Double, longitude: Double, page: Int16) {
+        FlickrApiClient.shared.getPhotos(latitude: latitude, longitude: longitude, page: page) { data, response, error in
             if error != nil {
                 return
             }
@@ -144,6 +162,7 @@ class PhotoAlbumViewController: UIViewController {
                 print("JSON converting error")
                 return
             }
+            
             for result in results {
                 let url = URL(string: result["url_m"] as! String)
                 self.placeholderCount += 1

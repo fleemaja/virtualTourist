@@ -24,9 +24,17 @@ class Pin: NSManagedObject {
             throw error
         }
         
+        // no existing pin found. create new pin for this location
         let pin = Pin(context: context)
         pin.latitude = pinInfo["latitude"] as! Double
         pin.longitude = pinInfo["longitude"] as! Double
+        pin.currentPage = 1
+        return pin
+    }
+    
+    class func updatePinPage(matching pinInfo: [String:Any], in context: NSManagedObjectContext) throws -> Pin {
+        let pin = try findOrCreatePin(matching: pinInfo, in: context)
+        pin.currentPage += 1
         return pin
     }
     
